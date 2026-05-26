@@ -1,0 +1,12 @@
+{
+  "identifier": "com.mindtonic.haml",
+  "name": "HAML",
+  "organization": "Jay Sanders // Mindtonic Media",
+  "description": "Tree-sitter syntax highlighting for HAML templates.",
+  "version": "1.0",
+  "license": "MIT",
+  "categories": ["languages"],
+  "repository": "https://github.com/mindtonic/nova-haml",
+  "bugs": "https://github.com/mindtonic/nova-haml/issues",
+  "min_runtime": "10.0"
+}

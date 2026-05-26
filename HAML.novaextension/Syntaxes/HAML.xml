@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<syntax name="haml">
+    <meta>
+        <name>HAML</name>
+        <type>markup</type>
+        <preferred-file-extension>haml</preferred-file-extension>
+        <parent>ruby</parent>
+    </meta>
+
+    <detectors>
+        <extension priority="1.0">haml</extension>
+    </detectors>
+
+    <indentation>
+        <increase>
+            <expression>(?:^\s*[%.\#].*$)</expression>
+        </increase>
+    </indentation>
+
+    <comments>
+        <single>
+            <expression>-#</expression>
+        </single>
+    </comments>
+
+    <brackets>
+        <pair open="{" close="}" />
+        <pair open="[" close="]" />
+        <pair open="(" close=")" />
+    </brackets>
+
+    <surrounding-pairs>
+        <pair open="{" close="}" />
+        <pair open="[" close="]" />
+        <pair open="(" close=")" />
+        <pair open="&quot;" close="&quot;" />
+        <pair open="&apos;" close="&apos;" />
+    </surrounding-pairs>
+
+    <tree-sitter language="haml">
+        <highlights />
+        <injections />
+    </tree-sitter>
+</syntax>
