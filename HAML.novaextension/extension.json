@@ -1,5 +1,5 @@
 {
-  "identifier": "com.mindtonic.haml",
+  "identifier": "media.mindtonic.haml",
   "name": "HAML",
   "organization": "Jay Sanders // Mindtonic Media",
   "description": "Tree-sitter syntax highlighting for HAML templates.",
