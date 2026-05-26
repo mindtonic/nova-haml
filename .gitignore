@@ -1,2 +1,4 @@
 *.o
 .DS_Store
+HAML.novaextension/Syntaxes/*.dylib
+HAML.novaextension/Syntaxes/*.dylib
