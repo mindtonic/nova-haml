@@ -1,70 +1,126 @@
-# HAML for Nova
+# nova-haml
 
-Tree-sitter based syntax highlighting for HAML templates, built on
-[vitallium/tree-sitter-haml](https://github.com/vitallium/tree-sitter-haml) (MIT).
+Tree-sitter based syntax highlighting for [HAML](https://haml.info/) templates
+in [Nova](https://nova.app/), Panic's macOS editor.
 
-Highlighting only — tags, classes/IDs, attributes, embedded Ruby (with
-injection into Nova's Ruby grammar), filters, doctypes, comments, and
-Ruby variable flavors.
+When this was written, the Nova Extension Library had no HAML support. This
+fills that gap: full tree-sitter highlighting for tags, classes, attributes,
+doctypes, comments, filters, and embedded Ruby — with the embedded Ruby parsed
+by Nova's built-in Ruby grammar (so method calls, strings, symbols, and
+variables are highlighted individually, not as one flat blob).
 
-## What's in the box
+Highlighting only — no completion, folding, or symbol navigation. That's by
+design; if you want those, this is a good base to build on.
 
-```
-.
-├── build.sh                       ← run this on your Mac
-├── parser-src/                    ← pre-generated parser (no codegen needed)
-│   ├── parser.c
-│   ├── scanner.c                  ← external scanner (HAML indentation)
-│   └── tree_sitter/               ← headers
-└── HAML.novaextension/            ← the extension bundle
-    ├── extension.json
-    ├── Syntaxes/HAML.xml
-    ├── Queries/highlights.scm
-    ├── Queries/injections.scm
-    └── Tests/test.haml
-```
+## Features
 
-The parser C source is already generated and has been verified to compile,
-so you do **not** need the tree-sitter CLI, Node, or any codegen step.
-All that's left is the one step that requires your machine: linking against
-Nova's bundled SyntaxKit framework and codesigning.
+- Tags (`%div`, `%span`), classes (`.foo`), and IDs
+- Attribute hashes — `{foo: "bar"}` and `(key="val")`
+- Doctypes (`!!! 5`)
+- Comments — both silent (`-#`) and HTML (`/`)
+- Filters (`:javascript`, `:css`, `:ruby`, …)
+- Embedded Ruby, highlighted via injection into Nova's built-in Ruby grammar
+- Ruby interpolation (`#{...}`) inside text and attributes
+- `⌘/` comment toggling using HAML's silent `-#` comment
 
-## Build
+## Install
 
-Requires: macOS with Xcode Command Line Tools (`xcode-select --install`)
-and Nova installed at `/Applications/Nova.app`.
+### From the Extension Library
+
+Search for "HAML" in Nova's Extension Library and click Install.
+
+### From a release
+
+Download the latest `HAML.novaextension.zip` from
+[Releases](https://github.com/mindtonic/nova-haml/releases), unzip, and
+**double-click** `HAML.novaextension` — macOS hands it to Nova, which installs
+it. Relaunch Nova, then open any `.haml` file.
+
+The released bundle includes a pre-built **universal** `libtree-sitter-haml.dylib`
+(arm64 + x86_64), so it runs on both Apple Silicon and Intel Macs. If it ever
+fails to load — for example after a future Nova update — rebuild it yourself;
+see "Build from source" below.
+
+### Build from source
+
+Requires macOS with Xcode Command Line Tools (`xcode-select --install`) and
+Nova installed at `/Applications/Nova.app`.
 
 ```bash
-chmod +x build.sh
-./build.sh
-# or, if Nova lives elsewhere:
-./build.sh /path/to/Nova.app
+git clone https://github.com/mindtonic/nova-haml.git
+cd nova-haml
+./build.sh                 # or: ./build.sh /path/to/Nova.app
 ```
 
-This produces `HAML.novaextension/Syntaxes/libtree-sitter-haml.dylib`.
+`build.sh` compiles the pre-generated parser in `parser-src/` as a universal
+binary, links it against Nova's bundled `SyntaxKit` framework, codesigns it
+(ad-hoc), and writes `HAML.novaextension/Syntaxes/libtree-sitter-haml.dylib`.
+The tree-sitter CLI is **not** required — the parser C source is already
+generated and committed.
 
-## Install / test
+Then double-click `HAML.novaextension` to install, and relaunch Nova.
 
-1. In Nova: **Extensions → Open Extensions Folder**, or just open the
-   `HAML.novaextension` folder as a project.
-2. **Extensions → Activate Project as Extension** (developer mode — reloads
-   on file change).
-3. Open `Tests/test.haml`. You should see tags, classes, Ruby, and filters
-   colored.
-4. If something looks off, **Extensions → Show Extension Console** surfaces
-   parser/query errors.
+## Project layout
 
-For a permanent install, copy `HAML.novaextension` into Nova's extensions
-folder (Extensions → Open Extensions Folder).
+```
+nova-haml/
+├── build.sh                  # compile the parser dylib (run on your Mac)
+├── parser-src/               # pre-generated parser.c + scanner.c + headers
+├── HAML.novaextension/       # the extension bundle
+│   ├── extension.json
+│   ├── README.md
+│   ├── CHANGELOG.md
+│   ├── extension.png
+│   ├── Syntaxes/HAML.xml      # syntax definition + tree-sitter linkage
+│   ├── Queries/highlights.scm # node → highlight-scope mapping
+│   ├── Queries/injections.scm # embedded-Ruby / filter injection
+│   └── Tests/test.haml        # a file exercising the features
+├── LICENSE                   # this extension's license (MIT)
+└── LICENSES/
+    └── tree-sitter-haml-LICENSE  # upstream grammar's MIT license
+```
 
-## Notes / known rough edges
+> Note: the compiled `.dylib` is not committed to the repo — it's built by
+> `build.sh` and attached to releases. The repo ships source only.
 
-- Scope names in `Queries/highlights.scm` follow Nova's documented set, but
-  exact theme coloring varies by theme. If a node type isn't picking up a
-  color you like, tweak the `@scope` on that line — it's plain text, easy to
-  edit.
-- `injections.scm` asks Nova to highlight embedded Ruby with its built-in
-  Ruby grammar and filter bodies (`:javascript`, `:css`) by their language
-  hint. Filter-body injection depends on Nova having that grammar available.
-- This is highlighting only — no completion, folding, or symbol nav. That was
-  the goal.
+## Customizing colors
+
+Highlight colors come from your active Nova theme, not this extension. Each
+node is mapped to a theme *scope* in `Queries/highlights.scm` (e.g.
+`(tag_name) @identifier.type`). If a token isn't colored the way you'd like,
+turn on **Editor → Syntax Inspector**, hover the token to see its current
+scope and the theme style applied, then change the `@scope` on that line to a
+different one your theme paints. Reinstall to apply.
+
+## Credits
+
+Built on [`tree-sitter-haml`](https://github.com/vitallium/tree-sitter-haml)
+by Vitaly Slobodin (MIT). The grammar's original license is preserved in
+`LICENSES/`.
+
+## Notes for anyone building a Nova tree-sitter syntax
+
+A few things that cost real time and aren't obvious from the docs:
+
+- **`min_runtime` is required.** Tree-sitter syntaxes need `"min_runtime":
+  "10.0"` (or higher) in `extension.json`. Without it, Nova silently treats the
+  extension as a legacy regex grammar, ignores the `<tree-sitter>` block, and
+  the syntax never loads — with **no error in the Extension Console**.
+- **Escape regex metacharacters in `<indentation>` expressions.** An unescaped
+  `#` in an indentation regex (e.g. `[%.#]`) silently invalidates the *entire*
+  syntax definition — highlighting, comments, everything — again with no
+  console error. Escape it: `[%.\#]`. This one bug is why this extension took
+  far longer to ship than it should have.
+- **Injection captures use Nova's names.** Embedded-language injection requires
+  `@injection.content` for the region and `(#set! injection.language "...")`
+  for the language — not the bare `@content` / `language` names some
+  tree-sitter docs show.
+- **Theme scopes are theme-specific.** A query can match a node perfectly and
+  still show no color if your theme doesn't style that scope. Use the Syntax
+  Inspector to confirm both the matched scope *and* whether the theme paints it.
+- **The Library requires a universal binary.** Submission rejects an
+  arm64-only dylib; compile with `-arch arm64 -arch x86_64`.
+
+## License
+
+MIT. See `LICENSE`. Bundled grammar is MIT, see `LICENSES/`.
